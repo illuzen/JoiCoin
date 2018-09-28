@@ -8,13 +8,24 @@ app = Flask(__name__, static_url_path="")
 
 tokenFreq = 60
 
+
+def getNowBlock():
+    now = datetime.datetime.now().timestamp()
+    nowBlock = round(now / tokenFreq) * tokenFreq
+    return nowBlock
+
+
+def getToken():
+    nowBlock = getNowBlock()
+    hsh = web3.sha3(text=str(nowBlock))
+    return hsh.hex()
+
+
 @app.route('/withdrawalRequests')
 def getWithdrawalRequests():
-    now = datetime.datetime.now()
-    fmt = now.strftime('%Y/%m/%d/%h/%M')
-    hsh = str(web3.sha3(text=fmt))
+    token = getToken()
     session = request.args.get('token')
-    if session != hsh:
-        return hsh
+    if session != token:
+        return token
     else:
         return 'Withdrawal Requests'
