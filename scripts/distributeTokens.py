@@ -65,7 +65,6 @@ def getFunctionEncoding(funcSig, args=[]):
     selector = getFunctionSelector(funcSig)
     argString = b''
     for arg in args:
-        print('arg',arg)
         if web3.isAddress(arg):
             paddedArg = codecs.decode(arg[2:], 'hex')
             #paddedArg = args[i]
@@ -83,7 +82,6 @@ def getFunctionEncoding(funcSig, args=[]):
 
 def writeChain(contractAddr, funcSig, args=[]):
     encoding = getFunctionEncoding(funcSig, args)
-    print('encoding',encoding)
     data = encoding
     #data = codecs.decode(encoding[2:], 'hex')
     nonce = web3.eth.getTransactionCount(fromAddr)
@@ -91,13 +89,6 @@ def writeChain(contractAddr, funcSig, args=[]):
     tx.sign(priv)
 
     raw_tx = web3.toHex(rlp.encode(tx))
-    print('funcSig', funcSig)
-    print('encoding', encoding)
-    print('args', args)
-    print('data', data)
-    print('nonce', nonce)
-    print('tx', tx.to_dict())
-    print('raw_tx', raw_tx)
     txHash = web3.eth.sendRawTransaction(raw_tx)
     print('Broadcasting', txHash)
     rcpt = web3.eth.getTransactionReceipt(txHash)
@@ -256,7 +247,7 @@ def writeRecord(totalTokens, sendingAddress):
 
 
 def matchingList(x,y):
-    return len(x) == len(y) and all([x[i] == y[i] for i in range(len(x))])
+    return len(x) == len(y) and all([x[i][0] == y[i][0] and x[i][1] == y[i][1] for i in range(len(x))])
 
 
 # TODO hook up to db
@@ -264,6 +255,13 @@ def getPaymentPlan():
     return [
             ('0xc3f10b7b37fd2608e343d72f173e5b28581881b9',10)
     ]
+
+
+def getPaymentPlanReal():
+    url = 'localnetwork:55555/withdrawalRequests'
+    resp = requests.get(url, params={}).text
+    resp2 = requests.get(url, params={'token':resp})
+    return resp2
 
 
 if __name__ == "__main__":
@@ -280,4 +278,6 @@ if __name__ == "__main__":
     writeCsvExecution(execution)
     if matchingList(paymentPlan,execution) is False:
         print('WARNING: Execution list does not match payment plan')
+        print(paymentPlan)
+        print(execution)
     writeRecord(totalTokens, sendingAddr)
